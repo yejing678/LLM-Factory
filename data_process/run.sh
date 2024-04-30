@@ -45,10 +45,9 @@ llama3="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B"
 llama3_chat="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B-Instruct"
 
 dataset_path="/home/jye/learn/LLM-FT/continue_writing/my_iemocap.jsonl"
-save_dir="/home/jye/learn/LLM-FT/continue_writing"
+save_dir="/home/jye/learn/LLM-FT/data"
 IEMOCAP_raw_path="/home/jye/datasets/ERC/IEMOCAP"
 IEMOCAP_processed_path="/home/jye/datasets/ERC/IEMOCAP/Processed/my_iemocap.csv"
-
 
 # python -m pdb continue_writing.py continue_writing ${llama2_chat} ${dataset_path} ${save_dir}
 python -m pdb continue_writing.py my_continue_writing ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
