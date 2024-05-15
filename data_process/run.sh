@@ -1,5 +1,5 @@
 #region select gpus
-num_gpus=2  # Set the desired number of GPUs here
+num_gpus=1  # Set the desired number of GPUs here
 
 # wait for gpus
 while true; do
@@ -49,5 +49,6 @@ save_dir="/home/jye/learn/LLM-FT/data"
 IEMOCAP_raw_path="/home/jye/datasets/ERC/IEMOCAP"
 IEMOCAP_processed_path="/home/jye/datasets/ERC/IEMOCAP/Processed/my_iemocap.csv"
 
-# python -m pdb continue_writing.py continue_writing ${llama2_chat} ${dataset_path} ${save_dir}
-python -m pdb continue_writing.py my_continue_writing ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
+# python -m pdb llama_infer.py continue_writing ${llama2_chat} ${dataset_path} ${save_dir}
+# python -m pdb llama_infer.py my_continue_writing ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
+python llama_infer.py emotion_recogntion ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
