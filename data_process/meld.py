@@ -1,5 +1,7 @@
 import os
 import json
+import pickle
+import copy
 import librosa
 import math
 import pandas as pd
@@ -13,23 +15,14 @@ from dataclasses import dataclass
 from collections import Counter
 from loguru import logger
 
-IEMOCAP_EMOTION_MAPPING = {
-    'neu': 'neutral',
-    'hap': 'happy',
-    'ang': 'angry',
-    'sad': 'sad',
-    'exc': 'excited',
-    'fru': 'frustrated',
-    'unknown': 'unknown'
-}
-
+MELD_EMOTION_NAMES =['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']
 
 Continue_writing_Format = (
     "### [System]: You are an experienced screenwriter who specialises in continuing stories based on existing plots. Now, continue this plot based on the script provided below and make sure that the renewed plot matches the emotion and style of the original story. {input}"
 )
 
 EmoRec_Format= (
-    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. DO Not explain! Your answer should only be one of [happy, sad, angry, neutral, excited, frustrated, unknown]. {input}"
+    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. DO Not explain! Your answer should only be one of ['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']. {input}"
 )
 
 _SAMPLE_RATE = 16000
@@ -61,10 +54,10 @@ def get_dataset(manifest, nshard, rank):
 
     return dataset
 
-class IEMOCAP_6_Ways(Dataset):
+class MELD(Dataset):
     def __init__(self, 
-                 raw_data_path, # /datasets/ERC/IEMOCAP
-                 processed_data_path, # /datasets/ERC/IEMOCAP/Processed/my_iemocap.csv
+                 raw_data_path, # /datasets/ERC/MELD
+                 processed_data_path, # /datasets/ERC/IEMOCAP/Processed/train.pkl
                  tokenizer=None, 
                  audio_processor=None, 
                  max_seq_len=1024, # max input sequence length
@@ -86,25 +79,30 @@ class IEMOCAP_6_Ways(Dataset):
         self.audio_processor = audio_processor
         self.data = self.read_data(processed_data_path, emotion_enable = False)
 
-    def read_data(self, csv_path, emotion_enable=False):
-        df = pd.read_csv(csv_path)
+    def read_data(self, processed_data_path, emotion_enable=False):
+        with open(processed_data_path, 'rb') as file:
+            raw_data = pickle.load(file)
+        r_data = copy.deepcopy(raw_data)
         data = []
         dialogues = {}
         
-        start, end = get_shard_range(len(df), self.nshard, self.rank)
+        sorted_data = sorted(r_data.items(), key=lambda x:(int(x[1]['dialogue_id']), int(x[1]['utterance_id'])))
+        start, end = get_shard_range(len(sorted_data), self.nshard, self.rank)
+        sorted_data = sorted_data[start:end]
 
         # group the utterances by dialog_id
-        for i in range(start, end):
-            dialog_id = df.at[i, 'dialog_id']
-            if dialog_id not in dialogues:
-                dialogues[dialog_id] = []
-            dialogues[dialog_id].append({
-                'speaker': df.at[i, 'speaker'],
-                'text': df.at[i, 'text'],
-                'emotion': IEMOCAP_EMOTION_MAPPING[df.at[i, 'emotion']],
-                'audio_path': os.path.join(self.base_path, df.at[i, 'audio_path']),
-                'utterance_id': df.at[i, 'utterance_id'],
-            })
+        for entry_name, sample in sorted_data:
+            if sample['dialogue_id'] not in dialogues:
+                dialogues[sample['dialogue_id']] = []
+            dialogues[sample['dialogue_id']].append(
+                {
+                    'speaker': sample['speaker'],
+                    'text': sample['text'],
+                    'emotion': sample['emotion'],
+                    'audio_path': sample['audio_path'],
+                    'utterance_id': sample['utterance_id'],
+                }
+            )
         
 
         if self.task_type=="continue_writing":
@@ -172,48 +170,3 @@ class IEMOCAP_6_Ways(Dataset):
         return_dict['response'] = response
         return_dict['wav_paths'] = audio_paths
         return return_dict
-
-
-@dataclass
-class EMO_DataCollator:
-
-    def __init__(self, pad_id: int = 0):
-        self.pad_id = pad_id
-
-    def collate_tokens(
-            self,
-            values: List[List[int]],
-            pad_id: int
-        ):
-        size = max(len(v) for v in values)
-        batch_size = len(values)
-        res = torch.LongTensor(batch_size, size).fill_(pad_id)
-
-        def copy_tensor(src, dst):
-            assert dst.numel() == src.numel()
-            dst.copy_(src)
-
-        for i, v in enumerate(values):
-            copy_tensor(torch.LongTensor(v), res[i][-len(v):])
-
-        return res
-
-
-    def __call__(self, samples: List[Dict]):
-        input_text=[sample['input_text'] for sample in samples]
-        input_ids = [sample["input_ids"] for sample in samples]
-        attention_mask = [sample["attention_mask"] for sample in samples]
-        wav_paths = [sample["wav_paths"] for sample in samples]
-        response = [sample["response"] for sample in samples]
-
-
-        input_ids = self.collate_tokens(input_ids, self.pad_id)
-        attention_mask = self.collate_tokens(attention_mask, self.pad_id)
-
-        return {
-            'input_text': input_text,
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "wav_paths": wav_paths,
-            'response': response,
-        }

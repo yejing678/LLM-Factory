@@ -1,3 +1,5 @@
+clear
+
 #region select gpus
 num_gpus=1  # Set the desired number of GPUs here
 
@@ -45,10 +47,12 @@ llama3="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B"
 llama3_chat="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B-Instruct"
 
 dataset_path="/home/jye/learn/LLM-FT/continue_writing/my_iemocap.jsonl"
-save_dir="/home/jye/learn/LLM-FT/data"
+save_dir="/home/jye/learn/LLM-Factory/output"
 IEMOCAP_raw_path="/home/jye/datasets/ERC/IEMOCAP"
 IEMOCAP_processed_path="/home/jye/datasets/ERC/IEMOCAP/Processed/my_iemocap.csv"
+MELD_raw_path="/home/jye/datasets/ERC/MELD"
+MELD_processed_path="/home/jye/datasets/ERC/MELD/Processed/test_data.pkl"
 
 # python -m pdb llama_infer.py continue_writing ${llama2_chat} ${dataset_path} ${save_dir}
 # python -m pdb llama_infer.py my_continue_writing ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
-python llama_infer.py emotion_recogntion ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
+python -m pdb llama_infer.py emotion_recogntion ${llama2_chat} MELD ${MELD_raw_path} ${MELD_processed_path} ${save_dir}

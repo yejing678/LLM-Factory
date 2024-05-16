@@ -12,9 +12,11 @@ from torch.utils.data.dataloader import DataLoader
 from dataclasses import dataclass
 from transformers import LlamaTokenizer, LlamaForCausalLM
 try:
-    from iemocap import IEMOCAP_6_Ways, IEMOCAP_DataCollator
+    from iemocap import IEMOCAP_6_Ways, EMO_DataCollator
+    from meld import MELD
 except:
-    from .iemocap import IEMOCAP_6_Ways, IEMOCAP_DataCollator
+    from .iemocap import IEMOCAP_6_Ways, EMO_DataCollator
+    from .meld import MELD
 from loguru import logger
 
 
@@ -180,6 +182,7 @@ def continue_writing(
 
 def my_continue_writing(
     model_name_or_path, # name_or_path of the model
+    dataset_name, # name of the dataset
     raw_data_path,
     processed_data_path,
     lab_dir, # path to the directory to save the lab files
@@ -197,8 +200,11 @@ def my_continue_writing(
     tokenizer = LlamaTokenizer.from_pretrained(model_name_or_path)
     model = LlamaForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
     
-    dataset = IEMOCAP_6_Ways(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank)
-    data_collator = IEMOCAP_DataCollator()
+    if dataset_name == "MELD":
+        dataset = MELD(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank)
+    elif dataset_name == "IEMOCAP":
+        dataset = IEMOCAP_6_Ways(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank)
+    data_collator = EMO_DataCollator()
     dataloader = DataLoader(
         dataset, 
         collate_fn=data_collator, 
@@ -249,15 +255,16 @@ def my_continue_writing(
 
 def emotion_recogntion(
     model_name_or_path, # name_or_path of the model
+    dataset_name,
     raw_data_path,
     processed_data_path,
     lab_dir, # path to the directory to save the lab files
-    nshard=8,
+    nshard=1,
     rank=0,
     batch_size=1
 ):
 
-    logger.add(f'emotion_recogntion.log', format="{time} {level} {message}", level="INFO")
+    logger.add(f'emotion_recognition.log', format="{time} {level} {message}", level="INFO")
     accelerator = Accelerator()
     logger.info(accelerator.state)
     device = accelerator.device
@@ -266,8 +273,11 @@ def emotion_recogntion(
     tokenizer = LlamaTokenizer.from_pretrained(model_name_or_path)
     model = LlamaForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
     
-    dataset = IEMOCAP_6_Ways(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank, task_type="emotion_recogntion")
-    data_collator = IEMOCAP_DataCollator()
+    if dataset_name == "MELD":
+        dataset = MELD(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank, task_type="emotion_recognition")
+    elif dataset_name == "IEMOCAP":
+        dataset = IEMOCAP_6_Ways(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank, task_type="emotion_recognition")
+    data_collator = EMO_DataCollator()
     dataloader = DataLoader(
         dataset, 
         collate_fn=data_collator, 
