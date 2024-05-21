@@ -253,13 +253,13 @@ def my_continue_writing(
     logger.info(f"finished successfully, saved file to {lab_path}")
 
 
-def emotion_recogntion(
+def emotion_recognition(
     model_name_or_path, # name_or_path of the model
     dataset_name,
     raw_data_path,
     processed_data_path,
     lab_dir, # path to the directory to save the lab files
-    nshard=1,
+    nshard=8,
     rank=0,
     batch_size=1
 ):
@@ -330,5 +330,5 @@ if __name__ == "__main__":
     fire.Fire({
         'continue_writing': continue_writing,
         'my_continue_writing': my_continue_writing,
-        'emotion_recogntion': emotion_recogntion,
+        'emotion_recognition': emotion_recognition,
     })

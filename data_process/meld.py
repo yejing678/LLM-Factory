@@ -22,7 +22,7 @@ Continue_writing_Format = (
 )
 
 EmoRec_Format= (
-    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. DO Not explain! Your answer should only be one of ['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']. {input}"
+    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. Do Not explain! Choose your answer from ['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']. {input}"
 )
 
 _SAMPLE_RATE = 16000

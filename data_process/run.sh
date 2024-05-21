@@ -1,5 +1,4 @@
 clear
-
 #region select gpus
 num_gpus=1  # Set the desired number of GPUs here
 
@@ -46,13 +45,49 @@ llama2_chat="/home/jye/huggingface/pretrained_model/Llama-2-7b-chat-hf"
 llama3="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B"
 llama3_chat="/home/jye/huggingface/pretrained_model/Meta-Llama-3-8B-Instruct"
 
-dataset_path="/home/jye/learn/LLM-FT/continue_writing/my_iemocap.jsonl"
-save_dir="/home/jye/learn/LLM-Factory/output"
 IEMOCAP_raw_path="/home/jye/datasets/ERC/IEMOCAP"
 IEMOCAP_processed_path="/home/jye/datasets/ERC/IEMOCAP/Processed/my_iemocap.csv"
 MELD_raw_path="/home/jye/datasets/ERC/MELD"
 MELD_processed_path="/home/jye/datasets/ERC/MELD/Processed/test_data.pkl"
 
-# python -m pdb llama_infer.py continue_writing ${llama2_chat} ${dataset_path} ${save_dir}
-# python -m pdb llama_infer.py my_continue_writing ${llama2_chat} ${IEMOCAP_raw_path} ${IEMOCAP_processed_path} ${save_dir}
-python -m pdb llama_infer.py emotion_recogntion ${llama2_chat} MELD ${MELD_raw_path} ${MELD_processed_path} ${save_dir}
+task="emotion_recognition"
+modal_name=${llama2_chat}
+dataset_name="IEMOCAP"
+save_dir="/home/jye/learn/LLM-Factory/output/${task}/${dataset_name}"
+raw_data_path="${dataset_name}_raw_path"
+processed_data_path="${dataset_name}_processed_path"
+
+
+FLAG=1
+
+case ${task} in
+'emotion_recognition'|'continue_writing'|'my_continue_writing')
+    case ${dataset_name} in
+    'IEMOCAP'|'MELD')
+        echo "******************************************************************************************"
+        echo "Task: ${task}"
+        echo "Dataset: ${dataset_name}"
+        echo "Base model: ${modal_name}"
+        echo "The result will be saved to: ${save_dir}."
+        echo "The raw_data_path: $(eval echo "\$$raw_data_path")."
+        echo "The processed_data_path: $(eval echo "\$$processed_data_path")."
+        echo "******************************************************************************************"
+        ;;
+    *)
+        echo "The dataset parameter is invalid. CHECK IT OUT!"
+        FLAG=0
+        ;;
+    esac
+    ;;
+*)
+    echo "The task parameter is invalid. CHECK IT OUT!"
+    FLAG=0
+    ;;
+esac
+
+
+
+if [ ${FLAG} = 1 ]
+then
+    python llama_infer.py ${task} ${modal_name} ${dataset_name} $(eval echo "\$$raw_data_path") $(eval echo "\$$processed_data_path") ${save_dir}
+fi
