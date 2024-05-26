@@ -18,11 +18,17 @@ from loguru import logger
 MELD_EMOTION_NAMES =['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']
 
 Continue_writing_Format = (
-    "### [System]: You are an experienced screenwriter who specialises in continuing stories based on existing plots. Now, continue this plot based on the script provided below and make sure that the renewed plot matches the emotion and style of the original story. {input}"
+    "<s>[INST] <<SYS>>\
+        You are an experienced screenwriter who specialises in continuing stories based on existing plots. Now, continue this plot based on the script provided below and make sure that the renewed plot matches the emotion and style of the original story.\
+        <<>/SYS>.\
+     {input} [/INST]"
 )
 
 EmoRec_Format= (
-    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. Do Not explain! Choose your answer from ['neutral', 'joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise']. {input}"
+    "<s>[INST] <<SYS>>\
+        You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. Do Not explain! Choose your answer from [neutral, joy, sadness, anger, fear, disgust, surprise]. \
+        <</SYS>>. \
+        {input} [/INST]"
 )
 
 _SAMPLE_RATE = 16000

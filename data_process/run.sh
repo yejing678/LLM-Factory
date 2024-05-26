@@ -51,11 +51,14 @@ MELD_raw_path="/home/jye/datasets/ERC/MELD"
 MELD_processed_path="/home/jye/datasets/ERC/MELD/Processed/test_data.pkl"
 
 task="emotion_recognition"
-modal_name=${llama2_chat}
+model_name="llama2_chat"
+model_name_or_path=$(eval echo \$$model_name)
 dataset_name="IEMOCAP"
-save_dir="/home/jye/learn/LLM-Factory/output/${task}/${dataset_name}"
-raw_data_path="${dataset_name}_raw_path"
-processed_data_path="${dataset_name}_processed_path"
+save_dir="/home/jye/learn/LLM-Factory/output/${task}/${dataset_name}-${model_name}"
+raw_data="${dataset_name}_raw_path"
+raw_data_path=$(eval echo "\$$raw_data_path")
+processed_data="${dataset_name}_processed_path"
+processed_data_path=$(eval echo "\$$processed_data_path")
 
 
 FLAG=1
@@ -67,7 +70,7 @@ case ${task} in
         echo "******************************************************************************************"
         echo "Task: ${task}"
         echo "Dataset: ${dataset_name}"
-        echo "Base model: ${modal_name}"
+        echo "Base model: ${model_name_or_path}"
         echo "The result will be saved to: ${save_dir}."
         echo "The raw_data_path: $(eval echo "\$$raw_data_path")."
         echo "The processed_data_path: $(eval echo "\$$processed_data_path")."
@@ -89,5 +92,5 @@ esac
 
 if [ ${FLAG} = 1 ]
 then
-    python llama_infer.py ${task} ${modal_name} ${dataset_name} $(eval echo "\$$raw_data_path") $(eval echo "\$$processed_data_path") ${save_dir}
+    python llama_infer.py ${task} ${model_name_or_path} ${dataset_name} ${raw_data_path} ${processed_data_path} ${save_dir}
 fi

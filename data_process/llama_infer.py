@@ -10,7 +10,7 @@ from accelerate import Accelerator
 from datasets import Dataset
 from torch.utils.data.dataloader import DataLoader
 from dataclasses import dataclass
-from transformers import LlamaTokenizer, LlamaForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 try:
     from iemocap import IEMOCAP_6_Ways, EMO_DataCollator
     from meld import MELD
@@ -109,7 +109,7 @@ def continue_writing(
     device = accelerator.device
 
     dataset = get_dataset(manifest, nshard, rank)
-    tokenizer = LlamaTokenizer.from_pretrained(model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 
     def process_dataset(batch):
         batch["input_ids"] = tokenizer(Continue_writing_Format.format(input=batch["inputs"])).input_ids
@@ -128,7 +128,7 @@ def continue_writing(
     dataset = dataset.filter(is_in_length_range, input_columns=["length"])
 
     logger.info(f"Using model: {os.path.splitext(os.path.basename(model_name_or_path))[0]}")
-    model = LlamaForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
 
     data_collator = DataCollator(tokenizer.pad_token_id)
     dataloader = DataLoader(
@@ -197,8 +197,8 @@ def my_continue_writing(
     device = accelerator.device
  
     logger.info(f"Using model: {os.path.splitext(os.path.basename(model_name_or_path))[0]}")
-    tokenizer = LlamaTokenizer.from_pretrained(model_name_or_path)
-    model = LlamaForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
     
     if dataset_name == "MELD":
         dataset = MELD(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank)
@@ -270,8 +270,11 @@ def emotion_recognition(
     device = accelerator.device
  
     logger.info(f"Using model: {os.path.splitext(os.path.basename(model_name_or_path))[0]}")
-    tokenizer = LlamaTokenizer.from_pretrained(model_name_or_path)
-    model = LlamaForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
+    # tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    if "Llama-3" in model_name_or_path:
+        tokenizer.pad_token_id = tokenizer.eos_token_id = 128001
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, torch_dtype=torch.float16)
     
     if dataset_name == "MELD":
         dataset = MELD(raw_data_path, processed_data_path, tokenizer=tokenizer, nshard=nshard, rank=rank, task_type="emotion_recognition")
@@ -300,6 +303,7 @@ def emotion_recognition(
             outputs = model.generate(
                 input_ids=batch["input_ids"].to(device),
                 attention_mask=batch["attention_mask"].to(device),
+                pad_token_id=tokenizer.eos_token_id,
                 max_new_tokens=1024,
                 do_sample=True,
                 num_beams=1,

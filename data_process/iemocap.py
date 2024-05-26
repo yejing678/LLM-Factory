@@ -25,11 +25,17 @@ IEMOCAP_EMOTION_MAPPING = {
 
 
 Continue_writing_Format = (
-    "### [System]: You are an experienced screenwriter who specialises in continuing stories based on existing plots. Now, continue this plot based on the script provided below and make sure that the renewed plot matches the emotion and style of the original story. {input}"
+    "<s>[INST] <<SYS>>\
+        You are an experienced screenwriter who specialises in continuing stories based on existing plots. Now, continue this plot based on the script provided below and make sure that the renewed plot matches the emotion and style of the original story.\
+        <<>/SYS>.\
+     {input} [/INST]"
 )
 
 EmoRec_Format= (
-    "### [System]: You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. Do Not explain! Choose your answer from [happy, sad, angry, neutral, excited, frustrated, unknown]. {input}"
+    "<s>[INST] <<SYS>>\
+        You are a professional emotion recognition expert. Now, predict the emotion of the target utterance. Do Not explain! Choose your answer from [happy, sad, angry, neutral, excited, frustrated]. \
+        <</SYS>>. \
+        {input} [/INST]"
 )
 
 _SAMPLE_RATE = 16000
@@ -143,12 +149,15 @@ class IEMOCAP_6_Ways(Dataset):
                         dialog_history = ' '.join([f"{u['speaker']}: {u['text']}\n" for u in utterances[i-self.context_window_size: i]])
                     inputs = f"### [Human]: {dialog_history} the target utterance is {utterances[i]['speaker']}: {utterances[i]['text']}\n### [Bot]: "
                     audio_path = utterances[i]['audio_path']
-                    sample = {
-                        'inputs_text': inputs,
-                        'response': utterances[i]['emotion'],
-                        'audio_paths': audio_path
-                    }
-                    data.append(sample)
+                    if utterances[i]['emotion'] == "unknown":
+                        continue
+                    else:
+                        sample = {
+                            'inputs_text': inputs,
+                            'response': utterances[i]['emotion'],
+                            'audio_paths': audio_path
+                        }
+                        data.append(sample)
 
         return data
 
