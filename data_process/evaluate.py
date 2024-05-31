@@ -20,8 +20,8 @@ def evaluate_accuracy(file_path):
         correct = sum(results)
 
     accuracy = correct / total if total > 0 else 0
-    print(f"Accuracy: {accuracy:.2f}")
+    print(f"Accuracy: {accuracy:.4f}")
     return accuracy
     
-file_path = '/home/jye/learn/LLM-Factory/output/emotion_recognition/IEMOCAP-llama3_chat/IEMOCAP_0_8.jsonl'
+file_path = '/home/jye/learn/LLM-Factory/output/emotion_recognition/MELD-llama3_chat/MELD_0_2.jsonl'
 evaluate_accuracy(file_path)
